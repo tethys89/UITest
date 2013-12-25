@@ -15,11 +15,18 @@ import java.util.logging.Logger;
  */
 public class UITestUI extends javax.swing.JFrame {
 
-    static String server = "irc.freenode.net";
-    static String nick = "testhys";
-    static String login = "simple_bot";
-    static String channel = "#testhysChan";
-    final static Socket socket = new Socket(server, 6667);
+    private static String server = "irc.freenode.net";
+    private static String nick = "testhys";
+    private static String login = "simple_bot";
+    private static String channel = "#testhysChan";
+    private static Socket socket = null;//new Socket(server, 6667)
+    private static int serverPort = 6667;
+    
+    public void Socket(String server,int serverPort){
+	UITestUI.server=server;
+	UITestUI.serverPort = serverPort;
+    }
+    
     
     // Creates new form UITestUI
     public UITestUI() throws Exception {
@@ -158,6 +165,7 @@ public class UITestUI extends javax.swing.JFrame {
 	}
 	//</editor-fold>
 
+	Socket socket = new Socket(server,serverPort);
 	/* Create and display the form */
 	java.awt.EventQueue.invokeLater(new Runnable() {
 	    public void run() {
