@@ -19,9 +19,9 @@ public class UITestUI extends javax.swing.JFrame {
     static String nick = "testhys";
     static String login = "simple_bot";
     static String channel = "#testhysChan";
-    private static Socket socket = new Socket(server,6667);
+    final static Socket socket = new Socket(server, 6667);
+    
     // Creates new form UITestUI
-
     public UITestUI() throws Exception {
 	initComponents();
     }
