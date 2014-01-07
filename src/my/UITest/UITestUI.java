@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.text.DefaultCaret;
 
 /**
  *
@@ -17,14 +18,23 @@ public class UITestUI extends javax.swing.JFrame {
 
     private static String server = "irc.freenode.net";
     private static String nick = "testhys";
-    private static String login = "simple_bot";
+    private static String login = "testhys";
+//    private static String channel = "#badscience";
     private static String channel = "#testhysChan";
-    private static Socket socket = null;//new Socket(server, 6667)
+    private static Socket socket;// = null;//new Socket(server, 6667)
     private static int serverPort = 6667;
+    private static BufferedWriter out;
+    private static BufferedReader in;
+
+
     
-    public void Socket(String server,int serverPort){
-	UITestUI.server=server;
-	UITestUI.serverPort = serverPort;
+ //   public static void Socket(String server,int serverPort){
+//	UITestUI.server=server;
+//	UITestUI.serverPort = serverPort;
+//    }
+    
+    public void sendMessage(String s){
+	
     }
     
     
@@ -55,9 +65,13 @@ public class UITestUI extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jTextArea1.setColumns(20);
+        jTextArea1.setLineWrap(true);
         jTextArea1.setRows(5);
+        jTextArea1.setWrapStyleWord(true);
         jScrollPane1.setViewportView(jTextArea1);
         jTextArea1.setEditable(false);
+        DefaultCaret caret = (DefaultCaret)jTextArea1.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         jTextArea2.setColumns(20);
         jTextArea2.setRows(5);
@@ -131,11 +145,14 @@ public class UITestUI extends javax.swing.JFrame {
 	String inText = jTextArea3.getText();
 	if (inText != null) {
 	    jTextArea1.append(inText + "\r\n");
+	    jTextArea3.setText("");
 	    try {
-		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-		writer.write("PRIVMSG " + channel + "inText");
+		System.out.print(inText+"\n");
+		out.write("PRIVMSG " + channel + " : " + inText+ "\r\n");
+		out.flush();
+		System.out.print("sending message"+"\n");
 	    } catch (IOException ex) {
-		Logger.getLogger(UITestUI.class.getName()).log(Level.SEVERE, null, ex);
+		System.out.print("couldn't send to server");
 	    }
 
 	}
@@ -165,7 +182,10 @@ public class UITestUI extends javax.swing.JFrame {
 	}
 	//</editor-fold>
 
-	Socket socket = new Socket(server,serverPort);
+	socket = new Socket(server,serverPort);
+	out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+	in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+	
 	/* Create and display the form */
 	java.awt.EventQueue.invokeLater(new Runnable() {
 	    public void run() {
@@ -177,19 +197,19 @@ public class UITestUI extends javax.swing.JFrame {
 	    }
 	});
 //	Socket socket = new Socket(server, 6667);
-	try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-		BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+	//try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+	//	BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
 	    // The channel which the bot will join.
 
 	    // Connect directly to the IRC server.
-	    writer.write("NICK " + nick + "\r\n");
-	    writer.write("USER " + login + " 8 * : Java IRC Hacks Bot\r\n");
-	    writer.flush();
+	    out.write("NICK " + nick + "\r\n");
+	    out.write("USER " + login + " 8 * : Java IRC Hacks Bot\r\n");
+	    out.flush();
 
 	    // Read lines from the server until it tells us we have connected.
 	    String line = "";
-	    while ((line = reader.readLine()) != null) {
+	    while ((line = in.readLine()) != null) {
 		if (line.indexOf("004") >= 0) {
 		    // We are now logged in.
 		    break;
@@ -201,24 +221,24 @@ public class UITestUI extends javax.swing.JFrame {
 
 
 	    // Join the channel.
-	    writer.write(
+	    out.write(
 		    "JOIN " + channel + "\r\n");
-	    writer.flush();
+	    out.flush();
 	    // Keep reading lines from the server.
-	    while ((line = reader.readLine()) != null) {
+	    while ((line = in.readLine()) != null) {
 		if (line.toLowerCase().startsWith("ping ")) {
 		    // We must respond to PINGs to avoid being disconnected.
-		    writer.write("PONG " + line.substring(5) + "\r\n");
-		    writer.write("PRIVMSG " + channel + " :I got pinged!\r\n");
+		    out.write("PONG " + line.substring(5) + "\r\n");
+		    out.write("PRIVMSG " + channel + " :I got pinged!\r\n");
 		    jTextArea1.append("PRIVMSG " + channel + " :I got pinged!\r\n");
-		    writer.flush();
+		    out.flush();
 		} else {
 		    // Print the raw line received by the bot.
 		    jTextArea1.append(line + "\r\n");
 
 		}
 	    }
-	}
+	
 
     }
     // <editor-fold defaultstate="collapsed" desc="Don't touch">
