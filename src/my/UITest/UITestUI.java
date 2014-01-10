@@ -1,11 +1,19 @@
 package my.UITest;
 
+import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.text.DefaultCaret;
@@ -17,27 +25,29 @@ import javax.swing.text.DefaultCaret;
 public class UITestUI extends javax.swing.JFrame {
 
     private static String server = "irc.freenode.net";
+    private static ArrayList<String> nicks = new ArrayList<>();
     private static String nick = "testhys";
     private static String login = "testhys";
-//    private static String channel = "#badscience";
     private static String channel = "#testhysChan";
-    private static Socket socket;// = null;//new Socket(server, 6667)
+    private static Socket socket;
     private static int serverPort = 6667;
     private static BufferedWriter out;
     private static BufferedReader in;
+    private static DateFormat dateFormat;
+    private static Date date;
 
+    public void sendMessage(String s) {
+	try {
+	    out.write("PRIVMSG " + channel + " : " + s + "\r\n");
+	    out.flush();
+	} catch (IOException ex) {
+	    System.out.print("couldn't send to server");
+	}
 
-    
- //   public static void Socket(String server,int serverPort){
-//	UITestUI.server=server;
-//	UITestUI.serverPort = serverPort;
-//    }
-    
-    public void sendMessage(String s){
-	
+	jTextArea1.append(dateFormat.format(date) + " " + nick + ": " + s + "\r\n");
+	jTextArea3.setText("");
     }
-    
-    
+
     // Creates new form UITestUI
     public UITestUI() throws Exception {
 	initComponents();
@@ -56,11 +66,17 @@ public class UITestUI extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTextArea2 = new javax.swing.JTextArea();
-        jButton1 = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextArea3 = new javax.swing.JTextArea();
+        jButton1 = new javax.swing.JButton();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTextArea2 = new javax.swing.JTextArea();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        quitButton = new javax.swing.JMenuItem();
+        partButton = new javax.swing.JMenuItem();
+        joinButton = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -73,10 +89,17 @@ public class UITestUI extends javax.swing.JFrame {
         DefaultCaret caret = (DefaultCaret)jTextArea1.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
-        jTextArea2.setColumns(20);
-        jTextArea2.setRows(5);
-        jScrollPane2.setViewportView(jTextArea2);
-        jTextArea2.setEditable(false);
+        jTextArea3.setColumns(20);
+        jTextArea3.setRows(5);
+        jTextArea3.setMinimumSize(new java.awt.Dimension(4, 0));
+        //jTextArea3.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),"send");
+        //jTextArea3.getActionMap().put("send",jButton1ActionPerformed);
+        jTextArea3.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                jTextArea3KeyPressed(evt);
+            }
+        });
+        jScrollPane3.setViewportView(jTextArea3);
 
         jButton1.setText("Enter");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -85,50 +108,85 @@ public class UITestUI extends javax.swing.JFrame {
             }
         });
 
-        jTextArea3.setColumns(20);
-        jTextArea3.setRows(5);
-        jScrollPane3.setViewportView(jTextArea3);
+        jTextArea2.setColumns(12);
+        jTextArea2.setRows(5);
+        jTextArea2.setMinimumSize(new java.awt.Dimension(4, 10));
+        jScrollPane2.setViewportView(jTextArea2);
+        jTextArea2.setEditable(false);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 290, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 319, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(58, 58, 58))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(jButton1)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(29, 29, 29)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(28, 28, 28))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 189, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 189, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 269, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(31, 31, 31)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(13, 13, 13)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(32, 32, 32))))
         );
+
+        jMenu1.setText("File");
+
+        quitButton.setText("quit");
+        quitButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                quitButtonActionPerformed(evt);
+            }
+        });
+        jMenu1.add(quitButton);
+
+        partButton.setText("part");
+        partButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                partButtonActionPerformed(evt);
+            }
+        });
+        jMenu1.add(partButton);
+
+        joinButton.setText("join");
+        joinButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                joinButtonActionPerformed(evt);
+            }
+        });
+        jMenu1.add(joinButton);
+
+        jMenuBar1.add(jMenu1);
+
+        jMenu2.setText("Edit");
+        jMenuBar1.add(jMenu2);
+
+        setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 407, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -141,22 +199,85 @@ public class UITestUI extends javax.swing.JFrame {
 
     @SuppressWarnings("empty-statement")
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-	// TODO add your handling code here:
 	String inText = jTextArea3.getText();
-	if (inText != null) {
-	    jTextArea1.append(inText + "\r\n");
-	    jTextArea3.setText("");
-	    try {
-		System.out.print(inText+"\n");
-		out.write("PRIVMSG " + channel + " : " + inText+ "\r\n");
-		out.flush();
-		System.out.print("sending message"+"\n");
-	    } catch (IOException ex) {
-		System.out.print("couldn't send to server");
-	    }
-
+	if (!"".equals(inText)) {
+	    sendMessage(inText);
 	}
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jTextArea3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextArea3KeyPressed
+	if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+	    String inText = jTextArea3.getText();
+	    if (!"".equals(inText)) {
+		sendMessage(inText);
+	    }
+	    evt.consume();
+	}
+    }//GEN-LAST:event_jTextArea3KeyPressed
+
+    private void quitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quitButtonActionPerformed
+	//close the server, close the gui, exit
+	try {
+	    System.out.print(dateFormat.format(date) + "exiting\n");
+	    out.write("PART " + channel + " :quitting, so long\r\n");
+	    out.flush();
+	    out.write("QUIT :client has quit\r\n");
+	    out.flush();
+	    out.close();
+
+
+	} catch (IOException ex) {
+	    System.out.print(dateFormat.format(date) + "couldn't send 'quit'\n");
+	}
+	System.exit(0);
+    }//GEN-LAST:event_quitButtonActionPerformed
+
+    private void partButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_partButtonActionPerformed
+	try {
+	    out.write("PART " + channel + " :goodbye cruel world\r\n");
+	    out.flush();
+	    jTextArea2.setText("");
+	} catch (IOException ex) {
+	    System.out.print(dateFormat.format(date) + "couldn't send 'quit'\n");
+	}
+    }//GEN-LAST:event_partButtonActionPerformed
+
+    private void joinButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
+	try {
+	    out.flush();
+	    out.write("JOIN " + channel + "\r\n");
+	    out.flush();
+	} catch (IOException ex) {
+	    System.out.print("couldn't rejoin channel\n");
+	}
+    }//GEN-LAST:event_joinButtonActionPerformed
+
+    public static void connect(String nick) {
+	try {
+	    try {
+		System.out.print("connecting socket " + nick + "\n");
+		socket = new Socket(server, serverPort);
+	    } catch (UnknownHostException ex) {
+		System.out.print("Error: Couldn't connect to host");
+	    } catch (IOException ex) {
+		System.out.print("Error: Couldn't connect socket");
+	    }
+
+	    System.out.print("connecting streams " + nick + "\n");
+	    out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+	    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));//, "UTF-8"
+
+//	    jTextArea1.append("Attempting to connect using nick " + nick + "\n");
+
+	    System.out.print("logging in " + nick + " " + login + "\n");
+	    out.write("NICK " + nick + "\r\n");
+	    out.write("USER " + login + " 8 * :" + nick + "\r\n");
+	    out.flush();
+	} catch (IOException ex) {
+	    System.out.print("Error: Couldn't connect streams");
+	}
+
+    }
 
     public static void main(String args[]) throws Exception {
 	/* Set the Nimbus look and feel */
@@ -182,10 +303,13 @@ public class UITestUI extends javax.swing.JFrame {
 	}
 	//</editor-fold>
 
-	socket = new Socket(server,serverPort);
-	out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-	in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-	
+	dateFormat = new SimpleDateFormat("[HH:mm:ss]");
+	date = new Date();
+
+	nicks.add("testhys");
+	nicks.add("testhys_");
+	nicks.add("testhys__");
+
 	/* Create and display the form */
 	java.awt.EventQueue.invokeLater(new Runnable() {
 	    public void run() {
@@ -196,61 +320,113 @@ public class UITestUI extends javax.swing.JFrame {
 		}
 	    }
 	});
-//	Socket socket = new Socket(server, 6667);
-	//try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-	//	BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-	    // The channel which the bot will join.
+//	// Connect directly to the IRC server.
+//	socket = new Socket(server, serverPort);
+//	out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+//	in = new BufferedReader(new InputStreamReader(socket.getInputStream()));//, "UTF-8"
+//	out.write("NICK " + nick + "\r\n");
+//	out.write("USER " + login + " 8 * :" + nick + "\r\n");
+//	out.flush();
 
-	    // Connect directly to the IRC server.
-	    out.write("NICK " + nick + "\r\n");
-	    out.write("USER " + login + " 8 * : Java IRC Hacks Bot\r\n");
-	    out.flush();
+//	connect();
 
-	    // Read lines from the server until it tells us we have connected.
-	    String line = "";
+	// Read lines from the server until it tells us we have connected.
+	String line = "";
+	String[] lineArr;
+	String userNick;
+	String msg;
+	ArrayList<String> nickList = new ArrayList<>();
+
+	for (String n : nicks) {
+	    System.out.print(n + "\n");
+	    boolean connected = false;
+	    connect(n);
 	    while ((line = in.readLine()) != null) {
+		jTextArea1.append(dateFormat.format(date) + ": " + line + "\n");
 		if (line.indexOf("004") >= 0) {
+		    connected = true;
 		    // We are now logged in.
 		    break;
 		} else if (line.indexOf("433") >= 0) {
-		    jTextArea1.append("Nickname is already in use.");
-		    return;
+		    jTextArea1.append(dateFormat.format(date) + "Nickname is already in use.");
+//		    nick = nick + "_";
+//		    login = login + "_";
+
+//		    connect();
+		    break;
+		    //return;
 		}
+//		if (connected) {
+//		    System.out.print("breaking once");
+//		    break;
+//		}
 	    }
+	    if (connected) {
+		System.out.print("breaking twice");
+		break;
+	    }
+	}
 
 
-	    // Join the channel.
-	    out.write(
-		    "JOIN " + channel + "\r\n");
-	    out.flush();
-	    // Keep reading lines from the server.
+	// Join the channel.
+	out.write("JOIN " + channel + "\r\n");
+	out.flush();
+	// Keep reading lines from the server.
+	try {
 	    while ((line = in.readLine()) != null) {
-		if (line.toLowerCase().startsWith("ping ")) {
-		    // We must respond to PINGs to avoid being disconnected.
-		    out.write("PONG " + line.substring(5) + "\r\n");
-		    out.write("PRIVMSG " + channel + " :I got pinged!\r\n");
-		    jTextArea1.append("PRIVMSG " + channel + " :I got pinged!\r\n");
-		    out.flush();
-		} else {
-		    // Print the raw line received by the bot.
-		    jTextArea1.append(line + "\r\n");
-
+		try {
+		    String[] nameList;
+		    if (line.indexOf("353") >= 0) {
+			nameList = line.split(":")[2].split(" ");
+			nickList.addAll(Arrays.asList(nameList));
+			Collections.sort(nickList);
+			for (String name : nickList) {
+			    jTextArea2.append(name + "\n");
+			}
+		    }
+		    if (line.toLowerCase().startsWith("ping ")) {
+			// We must respond to PINGs to avoid being disconnected.
+			out.write("PONG " + line.substring(5) + "\r\n");
+//			System.out.print("PingPong\n");
+			out.flush();
+		    } else {
+			if (line.contains("PRIVMSG") && line.toLowerCase().contains(channel.toLowerCase())) {
+			    System.out.print("incoming");
+			    //if it's a message to the channel, format and
+			    //print it to the text area
+			    userNick = line.split("!", 2)[0].substring(1);
+			    msg = line.split(":", 3)[2];
+			    jTextArea1.append(dateFormat.format(date) + " <" + userNick + "> " + msg + "\r\n");
+			} else {
+			    //just print it to the text area
+			    jTextArea1.append(dateFormat.format(date) + " " + line + "\r\n");
+			}
+		    }
+		} catch (IOException ex) {
 		}
-	    }
-	
 
+
+	    }
+	} catch (IOException ex) {
+	}
     }
     // <editor-fold defaultstate="collapsed" desc="Don't touch">
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private static javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextArea jTextArea2;
+    private static javax.swing.JTextArea jTextArea2;
     private javax.swing.JTextArea jTextArea3;
+    private javax.swing.JMenuItem joinButton;
+    private javax.swing.JMenuItem partButton;
+    private javax.swing.JMenuItem quitButton;
     // End of variables declaration//GEN-END:variables
 // </editor-fold>       
 }
