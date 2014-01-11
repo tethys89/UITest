@@ -26,8 +26,8 @@ public class UITestUI extends javax.swing.JFrame {
 
     private static String server = "irc.freenode.net";
     private static ArrayList<String> nicks = new ArrayList<>();
-    private static String nick = "testhys";
-    private static String login = "testhys";
+    private static String nick = "testhysN";
+    private static String login = "testhysL";
     private static String channel = "#testhysChan";
     private static Socket socket;
     private static int serverPort = 6667;
@@ -36,16 +36,93 @@ public class UITestUI extends javax.swing.JFrame {
     private static DateFormat dateFormat;
     private static Date date;
 
+    public static void connect(String nick) {
+	try {
+	    try {
+		socket = new Socket(server, serverPort);
+	    } catch (UnknownHostException ex) {
+		System.out.print("Error: Couldn't connect to host");
+	    } catch (IOException ex) {
+		System.out.print("Error: Couldn't connect socket");
+	    }
+
+	    out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+	    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));//, "UTF-8"
+
+	    System.out.print("logging in " + nick + " " + login + "\n");
+	    out.write("NICK " + nick + "\r\n");
+	    out.write("USER " + login + " 8 * :" + nick + "\r\n");
+	    out.flush();
+	} catch (IOException ex) {
+	    System.out.print("Error: Couldn't connect streams");
+	}
+
+    }
+
     public void sendMessage(String s) {
 	try {
-	    out.write("PRIVMSG " + channel + " : " + s + "\r\n");
-	    out.flush();
+	    if (s.substring(0, 1).equals("/")) {
+		String[] cmd = s.split(" ", 2);
+		String command = cmd[0].substring(1).toUpperCase();
+		
+		if (command.equals("MSG")){
+		    command = "PRIVMSG";
+		}
+		
+//		System.out.print(cmd[1]+"\n");
+		if (command.equals("JOIN")){
+		    channel = cmd[1];
+		}
+		out.write(command + " " + cmd[1] + "\r\n");
+		out.flush();
+	    } else {
+		out.write("PRIVMSG " + channel + " : " + s + "\r\n");
+		out.flush();
+	    }
 	} catch (IOException ex) {
 	    System.out.print("couldn't send to server");
 	}
 
 	jTextArea1.append(dateFormat.format(date) + " " + nick + ": " + s + "\r\n");
 	jTextArea3.setText("");
+    }
+
+    public static ArrayList<String> getNames(String channel) {
+	ArrayList<String> tempNicks = new ArrayList<>();
+	try {
+	    out.write("NAMES " + channel);
+
+	    String line;
+
+	    while ((line = in.readLine()) != null) {
+
+		//break this out into separate parsing function?
+
+		String[] splitLine;
+
+		splitLine = line.split(" ", 3);
+
+		System.out.print(splitLine[1] + "\n");
+		String[] nameList;
+		if (splitLine[1].equals("353")) {
+//		    if (line.indexOf("353") >= 0) {
+		    nameList = line.split(":")[2].split(" ");
+		    tempNicks.addAll(Arrays.asList(nameList));
+		    Collections.sort(tempNicks);
+//		    for (String name : tempNicks) {
+//			jTextArea2.append(name + "\n");
+//		    }
+		    return tempNicks;
+		} else {
+		    break;
+		}
+	    }
+
+	} catch (IOException ex) {
+	    System.out.print("couldn't fetch NAMES list");
+	}
+
+	return tempNicks;
     }
 
     // Creates new form UITestUI
@@ -90,7 +167,9 @@ public class UITestUI extends javax.swing.JFrame {
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
         jTextArea3.setColumns(20);
+        jTextArea3.setLineWrap(true);
         jTextArea3.setRows(5);
+        jTextArea3.setWrapStyleWord(true);
         jTextArea3.setMinimumSize(new java.awt.Dimension(4, 0));
         //jTextArea3.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),"send");
         //jTextArea3.getActionMap().put("send",jButton1ActionPerformed);
@@ -108,7 +187,7 @@ public class UITestUI extends javax.swing.JFrame {
             }
         });
 
-        jTextArea2.setColumns(12);
+        jTextArea2.setColumns(9);
         jTextArea2.setRows(5);
         jTextArea2.setMinimumSize(new java.awt.Dimension(4, 10));
         jScrollPane2.setViewportView(jTextArea2);
@@ -120,7 +199,7 @@ public class UITestUI extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 319, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 317, Short.MAX_VALUE)
                     .addComponent(jScrollPane1))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
@@ -252,33 +331,6 @@ public class UITestUI extends javax.swing.JFrame {
 	}
     }//GEN-LAST:event_joinButtonActionPerformed
 
-    public static void connect(String nick) {
-	try {
-	    try {
-		System.out.print("connecting socket " + nick + "\n");
-		socket = new Socket(server, serverPort);
-	    } catch (UnknownHostException ex) {
-		System.out.print("Error: Couldn't connect to host");
-	    } catch (IOException ex) {
-		System.out.print("Error: Couldn't connect socket");
-	    }
-
-	    System.out.print("connecting streams " + nick + "\n");
-	    out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-	    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));//, "UTF-8"
-
-//	    jTextArea1.append("Attempting to connect using nick " + nick + "\n");
-
-	    System.out.print("logging in " + nick + " " + login + "\n");
-	    out.write("NICK " + nick + "\r\n");
-	    out.write("USER " + login + " 8 * :" + nick + "\r\n");
-	    out.flush();
-	} catch (IOException ex) {
-	    System.out.print("Error: Couldn't connect streams");
-	}
-
-    }
-
     public static void main(String args[]) throws Exception {
 	/* Set the Nimbus look and feel */
 	//<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -320,17 +372,7 @@ public class UITestUI extends javax.swing.JFrame {
 		}
 	    }
 	});
-
-//	// Connect directly to the IRC server.
-//	socket = new Socket(server, serverPort);
-//	out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-//	in = new BufferedReader(new InputStreamReader(socket.getInputStream()));//, "UTF-8"
-//	out.write("NICK " + nick + "\r\n");
-//	out.write("USER " + login + " 8 * :" + nick + "\r\n");
-//	out.flush();
-
-//	connect();
-
+//	date = new Date();
 	// Read lines from the server until it tells us we have connected.
 	String line = "";
 	String[] lineArr;
@@ -339,70 +381,121 @@ public class UITestUI extends javax.swing.JFrame {
 	ArrayList<String> nickList = new ArrayList<>();
 
 	for (String n : nicks) {
-	    System.out.print(n + "\n");
+//	    System.out.print(n + "\n");
 	    boolean connected = false;
 	    connect(n);
 	    while ((line = in.readLine()) != null) {
-		jTextArea1.append(dateFormat.format(date) + ": " + line + "\n");
+//		jTextArea1.append(dateFormat.format(date) + ": " + line + "\n");
 		if (line.indexOf("004") >= 0) {
 		    connected = true;
+		    nick = n;
 		    // We are now logged in.
 		    break;
 		} else if (line.indexOf("433") >= 0) {
-		    jTextArea1.append(dateFormat.format(date) + "Nickname is already in use.");
-//		    nick = nick + "_";
-//		    login = login + "_";
-
-//		    connect();
+		    jTextArea1.append(dateFormat.format(new Date()) + "Nickname is already in use.");
 		    break;
-		    //return;
 		}
-//		if (connected) {
-//		    System.out.print("breaking once");
-//		    break;
-//		}
 	    }
 	    if (connected) {
-		System.out.print("breaking twice");
 		break;
 	    }
 	}
 
 
-	// Join the channel.
+	// Now join the channel.
 	out.write("JOIN " + channel + "\r\n");
 	out.flush();
 	// Keep reading lines from the server.
 	try {
 	    while ((line = in.readLine()) != null) {
 		try {
+
+		    //break this out into separate parsing function?
+
+		    String[] splitLine;
+
+		    splitLine = line.split(" ", 3);
+
+//		    System.out.print(splitLine[1] + "\n");
 		    String[] nameList;
-		    if (line.indexOf("353") >= 0) {
+
+		    if (splitLine[0].equals("PING")) {
+			//if (line.toLowerCase().startsWith("ping ")) {
+			// We must respond to PINGs to avoid being disconnected.
+//			System.out.print("pinged " + line + "\n");
+			out.write("PONG " + line.substring(5) + "\r\n");
+			out.flush();
+//			System.out.print("PONG " + line.substring(5) + "\r\n");
+//			return;
+		    } //    else {
+		    else if (splitLine[1].equals("353")) {
+//		    if (line.indexOf("353") >= 0) {
 			nameList = line.split(":")[2].split(" ");
 			nickList.addAll(Arrays.asList(nameList));
 			Collections.sort(nickList);
 			for (String name : nickList) {
 			    jTextArea2.append(name + "\n");
 			}
-		    }
-		    if (line.toLowerCase().startsWith("ping ")) {
-			// We must respond to PINGs to avoid being disconnected.
-			out.write("PONG " + line.substring(5) + "\r\n");
-//			System.out.print("PingPong\n");
-			out.flush();
-		    } else {
-			if (line.contains("PRIVMSG") && line.toLowerCase().contains(channel.toLowerCase())) {
-			    System.out.print("incoming");
-			    //if it's a message to the channel, format and
-			    //print it to the text area
+		    } //else if (splitLine[0].equals("PING")) {
+		    else if (splitLine[1].equals("PRIVMSG")) {
+//		    else if (line.contains("PRIVMSG") && line.toLowerCase().contains(channel.toLowerCase())) {
+			//if it's a message to the channel, format and print it to the text area
+			if (splitLine[2].toLowerCase().equals(channel.toLowerCase())) {
 			    userNick = line.split("!", 2)[0].substring(1);
 			    msg = line.split(":", 3)[2];
-			    jTextArea1.append(dateFormat.format(date) + " <" + userNick + "> " + msg + "\r\n");
-			} else {
-			    //just print it to the text area
-			    jTextArea1.append(dateFormat.format(date) + " " + line + "\r\n");
+			    jTextArea1.append(dateFormat.format(new Date()) + " <" + userNick + "> " + msg + "\r\n");
 			}
+			else {// if (nickList.contains(splitLine[2])
+			    userNick = line.split("!", 2)[0].substring(1);
+			    msg = line.split(":", 3)[2];
+			    jTextArea1.append("PM: "+dateFormat.format(new Date()) + " <" + userNick + "> " + msg + "\r\n");
+			    
+			}
+		    } //		    else if (line.contains("JOIN"))
+		    else if (splitLine[1].equals("JOIN")) {
+			String newNick = line.split("!", 2)[0].substring(1);
+//			nickList = getNames(channel);
+//			System.out.print(newNick);
+			if (!newNick.equals(nick)) {
+			    jTextArea2.setText("");
+			    nickList.add(newNick);
+			    Collections.sort(nickList);
+			    jTextArea1.append(dateFormat.format(new Date()) + " " + newNick + " has joined the channel\r\n");
+			    for (String name : nickList) {
+				jTextArea2.append(name + "\n");
+			    }
+			}
+		    } else if (splitLine[1].equals("PART") || splitLine[1].equals("QUIT")) {
+			String newNick = line.split("!", 2)[0].substring(1);
+//			nickList = getNames(channel);
+//			System.out.print(newNick);
+			nickList.remove(newNick);
+			Collections.sort(nickList);
+			jTextArea2.setText("");
+			for (String name : nickList) {
+			    jTextArea2.append(name + "\n");
+			}
+			jTextArea1.append(dateFormat.format(new Date()) + " " + newNick + " has left the channel (\"" + splitLine[1] + "\")\r\n");
+
+		    } else if (splitLine[1].equals("NICK")) {
+			String oldNick = line.split("!", 2)[0].substring(1);
+			String newNick = line.split(" ", 3)[2].substring(1);
+			nickList.remove(oldNick);
+			nickList.add(newNick);
+			jTextArea2.setText("");
+			for (String name : nickList) {
+			    jTextArea2.append(name + "\n");
+			}
+			if (newNick.equals(nick)) {
+			    jTextArea1.append(dateFormat.format(new Date()) + " *  You are now known as " + newNick);
+			} else {
+			    jTextArea1.append(dateFormat.format(new Date()) + " " + oldNick + " is now known as " + newNick);
+			}
+		    } else {
+			//just print it to the text area
+			jTextArea1.append(dateFormat.format(new Date()) + " " + line + "\r\n");
 		    }
+		    //   }
 		} catch (IOException ex) {
 		}
 
